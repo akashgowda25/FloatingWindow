@@ -1,0 +1,154 @@
+using Android.App;
+
+using Android.Content;
+
+using Android.OS;
+
+using Android.Runtime;
+
+using Android.Views;
+
+using Xamarin.Forms;
+
+using Xamarin.Forms.Platform.Android;
+
+using YourProjectNamespace;
+
+using YourProjectNamespace.Droid;
+
+[assembly: ExportRenderer(typeof(FloatingTimeWidget), typeof(FloatingTimeWidgetRenderer))]
+
+namespace YourProjectNamespace.Droid
+
+{
+
+    public class FloatingTimeWidgetRenderer : ViewRenderer<FloatingTimeWidget, FrameLayout>
+
+    {
+
+        private FloatingTimeWidgetClickListener _clickListener;
+
+        private FloatingTimeWidgetPage _floatingTimeWidgetPage;
+
+        public FloatingTimeWidgetRenderer(Context context) : base(context)
+
+        {
+
+            AutoPackage = false;
+
+        }
+
+        protected override void OnElementChanged(ElementChangedEventArgs<FloatingTimeWidget> e)
+
+        {
+
+            base.OnElementChanged(e);
+
+            if (Control == null)
+
+            {
+
+                _clickListener = new FloatingTimeWidgetClickListener();
+
+                _clickListener.Click += OnFloatingWidgetClick;
+
+                _floatingTimeWidgetPage = new FloatingTimeWidgetPage();
+
+                var renderer = Platform.CreateRendererWithContext(_floatingTimeWidgetPage, Context);
+
+                Platform.SetRenderer(_floatingTimeWidgetPage, renderer);
+
+                SetNativeControl(renderer.View);
+
+                Control.Clickable = true;
+
+                Control.SetOnClickListener(_clickListener);
+
+            }
+
+        }
+
+        protected override void Dispose(bool disposing)
+
+        {
+
+            if (disposing)
+
+            {
+
+                Control?.SetOnClickListener(null);
+
+                Control?.RemoveFromParent();
+
+                _floatingTimeWidgetPage?.Cleanup();
+
+                _floatingTimeWidgetPage = null;
+
+                _clickListener?.Dispose();
+
+                _clickListener = null;
+
+            }
+
+            base.Dispose(disposing);
+
+        }
+
+        private void OnFloatingWidgetClick(object sender, EventArgs e)
+
+        {
+
+            // Show the Xamarin.Forms view in the floating widget
+
+            var floatingWidgetIntent = new Intent(Context, typeof(FloatingTimeWidgetActivity));
+
+            Control.Context.StartActivity(floatingWidgetIntent);
+
+        }
+
+    }
+
+    public class FloatingTimeWidgetClickListener : Java.Lang.Object, IOnClickListener
+
+    {
+
+        public event EventHandler Click;
+
+        public void OnClick(View v)
+
+        {
+
+            Click?.Invoke(this, EventArgs.Empty);
+
+        }
+
+    }
+
+    [Activity(Label = "FloatingTimeWidgetActivity", Theme = "@style/Theme.AppCompat.Light.NoActionBar")]
+
+    public class FloatingTimeWidgetActivity : FormsAppCompatActivity
+
+    {
+
+        protected override void OnCreate(Bundle savedInstanceState)
+
+        {
+
+            base.OnCreate(savedInstanceState);
+
+            // Load the Xamarin.Forms view into the activity
+
+            var floatingTimeWidgetPage = new FloatingTimeWidgetPage();
+
+            Xamarin.Forms.Forms.Init(this, savedInstanceState);
+
+            LoadApplication(new App());
+
+            SetContentView(floatingTimeWidgetPage.CreateView());
+
+        }
+
+    }
+
+}
+
